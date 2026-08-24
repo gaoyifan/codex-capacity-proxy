@@ -47,10 +47,6 @@ server_is_overloaded | slow_down
 
 This enters Codex's built-in rate-limit retry path. It does not make that retry loop infinite.
 
-## Cloudflare Workers
-
-The Worker implementation remains in the repository for comparison, but OpenAI blocks Cloudflare cross-zone Worker traffic before it reaches the Codex backend. See [EXPERIMENT.md](EXPERIMENT.md) for the evidence.
-
 ## Check
 
 ```sh

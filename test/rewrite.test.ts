@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildUpstreamHeaders,
-} from "../src/index";
-import {
   rewriteCapacityError,
   rewriteSseEventBlock,
 } from "../src/rewrite";
@@ -72,37 +69,5 @@ describe("rewriteSseEventBlock", () => {
     expect(result.rewritten).toBe(true);
     expect(result.text).toContain('"code":"rate_limit_exceeded"');
     expect(result.text).toContain("Please try again in 30s.");
-  });
-});
-
-describe("buildUpstreamHeaders", () => {
-  it("preserves Codex semantic headers and regenerates transport headers", () => {
-    const incoming = new Headers({
-      authorization: "Bearer secret",
-      "chatgpt-account-id": "account-id",
-      connection: "keep-alive",
-      host: "proxy.example.com",
-      "openai-beta": "responses_websockets=2026-02-06",
-      originator: "codex_cli_rs",
-      "sec-websocket-key": "downstream-key",
-      "x-codex-turn-state": "sticky-state",
-      "cf-ray": "edge-ray",
-    });
-
-    const headers = buildUpstreamHeaders(incoming, "gzip", true);
-
-    expect(headers.get("authorization")).toBe("Bearer secret");
-    expect(headers.get("chatgpt-account-id")).toBe("account-id");
-    expect(headers.get("openai-beta")).toBe(
-      "responses_websockets=2026-02-06",
-    );
-    expect(headers.get("originator")).toBe("codex_cli_rs");
-    expect(headers.get("x-codex-turn-state")).toBe("sticky-state");
-    expect(headers.get("accept-encoding")).toBe("gzip");
-    expect(headers.get("upgrade")).toBe("websocket");
-    expect(headers.has("host")).toBe(false);
-    expect(headers.has("connection")).toBe(false);
-    expect(headers.has("sec-websocket-key")).toBe(false);
-    expect(headers.has("cf-ray")).toBe(false);
   });
 });

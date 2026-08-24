@@ -59,12 +59,15 @@ export function rewriteSseEventBlock(block: string): RewriteResult {
 
 export function createSseRewriteStream(
   onRewrite: () => void,
-): TransformStream<Uint8Array, Uint8Array> {
+): TransformStream<Uint8Array<ArrayBuffer>, Uint8Array<ArrayBuffer>> {
   const decoder = new TextDecoder();
   const encoder = new TextEncoder();
   let buffered = "";
 
-  return new TransformStream({
+  return new TransformStream<
+    Uint8Array<ArrayBuffer>,
+    Uint8Array<ArrayBuffer>
+  >({
     transform(chunk, controller) {
       buffered += decoder.decode(chunk, { stream: true });
       while (true) {
