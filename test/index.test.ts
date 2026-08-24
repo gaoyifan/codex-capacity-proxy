@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildUpstreamHeaders,
+} from "../src/index";
+import {
   rewriteCapacityError,
   rewriteSseEventBlock,
-} from "../src/index";
+} from "../src/rewrite";
 
 describe("rewriteCapacityError", () => {
   it("turns a Responses capacity failure into a retryable rate limit error", () => {

@@ -1,29 +1,58 @@
-# Codex capacity proxy experiment
+# Codex capacity proxy
 
-This repository tests whether a Cloudflare Worker can transparently proxy the built-in Codex `openai` provider and change `server_is_overloaded` and `slow_down` failures into retryable rate-limit failures.
+This proxy keeps Codex on its built-in `openai` provider and ChatGPT subscription authentication while changing `server_is_overloaded` and `slow_down` failures into retryable rate-limit failures.
 
-It cannot currently reach the ChatGPT Codex backend. OpenAI blocks the cross-zone Worker subrequest before it reaches the Codex application, even though the Worker receives and forwards the Codex authentication and feature headers. See [EXPERIMENT.md](EXPERIMENT.md) for the live test and evidence.
+The local Node proxy supports both Responses WebSocket traffic and HTTP/SSE fallback traffic. Integration tests cover header forwarding and capacity rewriting on both transports.
 
-The implementation includes Responses WebSocket forwarding, HTTP/SSE fallback forwarding, and capacity-error rewriting. The rewriting logic is covered by unit tests but could not be exercised against a real upstream capacity response because of the edge block.
+## Run locally
 
-## Reproduce
-
-Deploy the Worker:
+Install dependencies and start the loopback-only listener:
 
 ```sh
 npm install
-npm run check
-npm run deploy
+npm run local
 ```
 
-Run Codex with a temporary backend override:
+In another terminal, point Codex at it:
 
 ```sh
-codex -c 'openai_base_url="https://WORKER.workers.dev/backend-api/codex"'
+codex -c 'openai_base_url="http://127.0.0.1:8788/backend-api/codex"'
 ```
 
-The provider remains the built-in `openai` provider, so ChatGPT login and subscription authentication remain active. The current expected result is an upstream `403` response.
+The provider remains the built-in `openai` provider. No third-party API key or provider configuration is needed.
 
-## Security
+The proxy logs request paths, transports, upstream status codes, and capacity rewrites. It does not log headers or request bodies.
 
-The Worker receives the ChatGPT bearer token supplied by Codex. Keep the repository free of tokens and do not add unrelated forwarding destinations. Application logs record only whether selected headers are present, but Cloudflare live tail events can include request metadata; observability is therefore left disabled after the experiment.
+## Run on an intranet
+
+Listen on all interfaces only when the host is protected by the internal network:
+
+```sh
+CODEX_PROXY_HOST=0.0.0.0 CODEX_PROXY_PORT=8788 npm run local
+```
+
+Clients then use `http://INTRANET_HOST:8788/backend-api/codex` as `openai_base_url`.
+
+The proxy has no client authentication or TLS termination and receives each caller's ChatGPT bearer token. Restrict network access to trusted clients; use an authenticated TLS reverse proxy before exposing it beyond a trusted network.
+
+## Retry behavior
+
+The transformation is:
+
+```text
+server_is_overloaded | slow_down
+          -> rate_limit_exceeded
+          +  "Please try again in 30s."
+```
+
+This enters Codex's built-in rate-limit retry path. It does not make that retry loop infinite.
+
+## Cloudflare Workers
+
+The Worker implementation remains in the repository for comparison, but OpenAI blocks Cloudflare cross-zone Worker traffic before it reaches the Codex backend. See [EXPERIMENT.md](EXPERIMENT.md) for the evidence.
+
+## Check
+
+```sh
+npm run check
+```
