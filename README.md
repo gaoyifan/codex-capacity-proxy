@@ -35,6 +35,20 @@ Clients then use `http://INTRANET_HOST:8788/backend-api/codex` as `openai_base_u
 
 The proxy has no client authentication or TLS termination and receives each caller's ChatGPT bearer token. Restrict network access to trusted clients; use an authenticated TLS reverse proxy before exposing it beyond a trusted network.
 
+## NixOS
+
+The flake exports `packages.<system>.default` and `nixosModules.default`. A minimal NixOS configuration is:
+
+```nix
+{inputs, ...}: {
+  imports = [inputs.codex-capacity-proxy.nixosModules.default];
+
+  services.codex-capacity-proxy.enable = true;
+}
+```
+
+The module listens on `127.0.0.1:8788` by default. Configure TLS and network access at the publishing layer.
+
 ## Retry behavior
 
 The transformation is:

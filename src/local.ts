@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { createLocalProxyServer } from "./local-server.ts";
 
 const host = process.env.CODEX_PROXY_HOST ?? "127.0.0.1";

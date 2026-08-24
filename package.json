@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "codex-capacity-proxy": "dist/local.js"
+  },
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "check": "npm run typecheck && npm test",
     "local": "node src/local.ts",
     "test": "vitest run",
